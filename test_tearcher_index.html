@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <!--10秒で自動更新
+        <meta http-equiv="Refresh" content="10">
+        -->
+    </head>
+    <body>
+        <div>
+            <?php
+                    /*フォルダstudents内に存在するテキストデータを読み込み、リンク生成をして表示*/
+                    if($fname = opendir('students')){
+                        while(false !== ($entry = readdir($fname))){
+                            if($entry != "." && $entry != ".."){
+                                print "<a href=\"students/$entry\">$entry</a><br/>";
+                            }
+                        }
+                        closedir($fname);
+                    }               
+            ?>
+            
+        </div>
+        
+    </body>
+    
+</html>

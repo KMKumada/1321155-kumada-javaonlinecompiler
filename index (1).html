@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!--文章の表示領域の調整-->
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<!--bootstrap-->
+	<link href="css/font-awesome.min.css" rel="stylesheet">
+	<link href="css/font-awesome.css" rel="stylesheet">
+	<!--未使用 アイコン用-->
+	<!--<link href="css/bootstrap-custom.css" rel="stylesheet">-->
+	<!--未使用 css-->
+	<link rel="stylesheet" type="text/css" href="test2.css">
+	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+	<script src="js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+
+	<script type="text/javascript">
+		//editorの宣言
+		var editor;
+		window.onload = function() {
+			//editorを起動する
+			editor = ace.edit("editor");
+			createStudentSelector();
+
+			editor.commands.addCommand({
+				Name: "savefile",
+				bindKey: {
+					win: "Ctrl-S",
+					mac: "Command-S"
+				},
+				exec: function(editor) {
+					save("save");
+				}
+			});
+			$('.data_menu1 a.exercise').click(function() {
+
+
+				var student_id = $('#student_selector').val();
+				if (student_id == "") {
+					alert("Please select your name.");
+					return;
+				}
+				var id = $(this).attr('exercise_id');
+
+				document.source.elements['exercise_id'].value = id;
+
+				$.post("php/loadLatestSource.php", {
+					exercise_id: id,
+					student_id: student_id
+				}, function(data) {
+					console.log(data.content);
+					if (data.content) {
+						editor.setValue(data.content);
+						save("restart");
+					} else {
+						editor.setValue("public class Kadai" + id + " {\n\n}");
+						save("start");
+					}
+				})
+
+				$.post("php/get_exercise.php", {
+					exercise_id: id
+				}, function(data) {
+					console.log(data.content);
+					$('#exercise').text(data.content);
+				})
+
+
+				$('.data_menu1 a.exercise').css('color', 'white')
+				$(this).css('color', 'red');
+			})
+		};
+
+
+
+		function createStudentSelector() {
+			$.post("php/create_selector.php", function(data) {
+				var sel = $("#student_selector");
+				//sel.empty();
+				for (var i = 0; i < data.length; i++) {
+					sel.append('<option value="' + data[i].id + '">' + data[i].name + '</option>');
+				}
+			})
+		}
+
+
+		function compiler() {
+            //event.preventDefault();
+			var student_id = $('#student_selector').val();
+			if (student_id == "") {
+				alert("Please select your name.");
+				return;
+			}
+
+			var is_finished = $("#isFinished").prop('checked');
+
+			//lecture_week_id = document.source.elements['lecture_week_id'].value;
+
+            exercise_id = document.source.elements['exercise_id'].value;
+
+			//editorから値を取る
+			var str = editor.getValue();
+
+			$.post("php/getdata.php", {
+				str: str,
+				exercise_id: exercise_id,
+				student_id: student_id,
+				is_finished: is_finished
+			}, function(data) {
+				console.log(data.result);
+				$('#message').text(data.result);
+				$('#judge').text(data.type);
+			})
+
+		}
+
+		function save(type) {
+			var student_id = $('#student_selector').val();
+			if (student_id == "") {
+				alert("Please select your name.");
+				return;
+			}
+
+			exercise_id = document.source.elements['exercise_id'].value;
+			if (exercise_id == "") {
+				alert("Please select exercise.");
+				return;
+			}
+
+			//editorから値を取る
+			var str = editor.getValue();
+
+			$.post("php/save.php", {
+				str: str,
+				exercise_id: exercise_id,
+				student_id: student_id,
+				type: type
+			}, function(data) {
+				$('#judge').text(data.type);
+			})
+		}
+
+		$(document).ready(function() {
+			$('#kirikae').click(function() {
+				$('left').hide();
+				var elem = $('col-md-6 center');
+   	    elem.className = 'col-xs-6 center';
+				var elem = $('col-xs-6 right');
+			  elem.className = 'col-sx-6 right';
+			})
+
+		})
+		$(document).ready(function() {
+			$('#kirikae2').click(function() {
+				$('.op').show();
+				$('.clsa').hide();
+			})
+
+		})
+
+		/*
+		function doAction2() {//実行結果用
+
+			var student_id = $('#student_selector').val();
+			if (student_id == "") {
+				alert("Please select your name.");
+				return;
+			}
+			function doAction3() {
+
+				var student_id = $('#student_selector').val();
+				if (student_id == "") {
+					alert("Please select your name.");
+					return;
+				}
+				function doAction4() {
+
+					var student_id = $('#student_selector').val();
+					if (student_id == "") {
+						alert("Please select your name.");
+						return;
+					}
+					*/
+	</script>
+
+	<title>JAVA Cloud Compiler</title>
+</head>
+
+
+<body>
+	<div class="container-fluid">
+		<div class="row" style="margin-bottom:5px;">
+			<font size="5" color="white">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Java Online Compiler</font>
+			<div class="col-xs-12">
+				<font size="3" color="white">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;User:</font>
+				<font color="white"><i class="fa fa-user"></i></font>
+				<select name="student_id" id="student_selector">
+					<option value="">名前を選択してください</option>
+				</select>
+				<font size="3" color="white">Work:</font>
+				<font color="white"><i class="fa fa-archive"></i></font>
+				<select name="" id="">
+					<option value="">選択中の課題</option>
+				</select>
+			</div>
+		</div>
+
+		<!-- 課題・作成ファイル・問題文・エディタ設定 -->
+		<div class="row-10">
+			<div class="col-md-3 left">
+				<div class="row">
+					<div class="col-xs-12">
+						<!--left-sidemenuはない172行目-->
+						<div id="left-side-menu" class="panel-group"style="margin-top:40px;">
+							<!-- 課題パネル k下記にもクラス名にpanelgroup-->
+							<div id="select_box" class="clearfix panel panel-default">
+								<div class="panel-heading">
+									<h4 class="panel-title">
+										<a class="accordion-toggle" data-toggle="collapse" data-present="#left-side-menu" href="#data_menu1">
+											<i class="fa fa-pencil"></i><font>課題</font><!--アイコン用ライブラリのクラス名入れてください-->
+										</a>
+									</h4>
+								</div>
+								<!--下記のdata_menu1タグがクラス名になっていたのをIDに変えました。-->
+								<div id="data_menu1" class="panel-collapse collapse in data_menu1">
+									<div class="panel-body">
+										<ul class="list-inline">
+											<li>
+												<a href="#">第1回</a>
+												<a class="exercise" exercise_id="1">Q1</a>
+												<a class="exercise" exercise_id="2">Q2</a>
+												<a class="exercise" exercise_id="3">Q3</a>
+												<a class="exercise" exercise_id="4">Q4</a>
+											</li>
+										</ul>
+										<ul class="list-inline">
+											<li>
+												<a href="#">第2回</a>
+												<a class="exercise" exercise_id="5">Q1</a>
+												<a class="exercise" exercise_id="6">Q2</a>
+												<a class="exercise" exercise_id="7">Q3</a>
+												<a class="exercise" exercise_id="8">Q4</a>
+											</li>
+										</ul>
+										<ul class="list-inline">
+											<li>
+												<a href="#">第3回</a>
+												<a class="exercise" exercise_id="9">Q1</a>
+												<a class="exercise" exercise_id="10">Q2</a>
+												<a class="exercise" exercise_id="11">Q3</a>
+												<a class="exercise" exercise_id="12">Q4</a>
+											</li>
+										</ul>
+										<ul class="list-inline">
+											<li>
+												<a href="#">第4回</a>
+												<a class="exercise" exercise_id="13">Q1</a>
+												<a class="exercise" exercise_id="14">Q2</a>
+												<a class="exercise" exercise_id="15">Q3</a>
+												<a class="exercise" exercise_id="16">Q4</a>
+											</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+							<!-- 作成ファイル -->
+							<div id="filelist-panel" class="panel panel-default">
+								<div class="panel-heading">
+									<h4 class="panel-title">
+										<a class="accordion-toggle" data-toggle="collapse" data-present="#left-side-menu" href="#filelist">
+												<i class="fa fa-folder-open"></i><font>作成ファイル</font>
+										</a>
+									</h4>
+								</div>
+								<div id="filelist" class="panel-collapse collapse in">
+									<div class="panel-body">
+										<div id="file_list">
+											<div class="data_menu3">
+												<ul class="list-inline">
+													<li><a hreg="#">kadai1.java</a></li>
+													<li><a hreg="#">kadai2.java</a></li>
+												</ul>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!-- 問題文 -->
+							<div id="content-panel" class="panel panel-default">
+								<div class="panel-heading">
+									<h4 class="panel-title">
+										<a class="accordion-toggle" data-toggle="collapse" data-present="#left-side-menu" href="#psentence_list">
+											<i class="fa fa-file"></i> <font>問題文</font>
+										</a>
+									</h4>
+								</div>
+								<div id="psentence_list" class="panel-collapse collapse in">
+									<div class="panel-body" style="padding:0px;">
+										<textarea name="mondai" class="mondai_form" id="exercise" style="border:none;background:none;width:100%;height:250px;" readonly></textarea>
+									</div>
+								</div>
+							</div>
+							<!-- エディタ設定 -->
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- エディタ -->
+			<div class="col-md-6 center">
+				<div class="row">
+					<div class="col-xs-12">
+						<div id="edit_menu">
+							<!--editorタグのstyleも変更しました-->
+							<form name="source">
+
+								<input type="hidden" name="exercise_id">
+								<!--<input type="hidden" name="lecture_week_id">-->
+								<input type="checkbox" id="isFinished" name="isFinished" value="0"><font size="3" color="white"> ← 完成版を提出する場合にチェックして下さい。</font>
+
+                                <button type="button" id="sousin" onclick="doaction1()" class="btn submit_button1">
+									<!-- btn btn-secondary btn-lg btn-block -->
+									<i class="fa fa-cloud-upload"></i><font>提出</font>
+								</button>
+
+
+                                <!--
+                                <input type="button" onClick="compiler()" value="実行" class="submit_button1">
+                                -->
+
+
+                                <button type="button" onclick="compiler()" class="btn" >
+									<!-- btn btn-secondary btn-lg btn-block -->
+								<i class="fa fa-link"></i><font>実行</font>
+								</button>
+
+
+
+								<!--<button type="button" id="kirikae" onClick="doAction3" class="btn ">
+									<i class=""></i><font>左をしまう</font>
+								</button>
+								<button type="button"class="btn" id="kirikae2" onclick="doAction4" class="btn">
+									<i class=""></i><font>右をしまう</font>
+								</button>--><!--20160314コメントアウトしました-->
+								<div name="str" id="editor" style="height: 600px;margin-top:7px;"></div>
+								<!--<script>
+								var editor = ace.edit("editor");
+								editor.setTheme("ace/theme/monokai");
+								editor.setFontSize(14);
+								editor.getSession().setMode("ace/mode/html");
+								editor.getSession().setUseWrapMode(true);
+								editor.getSession().setTabSize(2);
+							</script>-->
+			　　　　　　　<!--ここにボタンとかありました-->
+								<!--inputtypeからbuttontypeに変更したためコメントアウト
+								<input type="button" id="sousin" onclick="doAction1()" value="提出" class="submit_button1" style="padding:2px;
+							border: 1px solid #333333;
+							width: 100%;
+							height: 50px;
+        			margin-top:1px;
+        			margin-bottom:10px;">
+               -->
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 実行結果・結果判定 -->
+			<div class="op col-md-3 right">
+				<div class="row">
+					<div class="col-xs-12">
+						<ul class="nav nav-tabs">
+							<li class="active"><a href="#tab1" data-toggle="tab">結果</a></li>
+							<li><a href="#tab2" data-toggle="tab">メッセージ</a></li>
+						</ul>
+
+						<div class="tab-content">
+							<div class="tab-pane active" id="tab1">
+								<div class="other_menu other1" style="margin:0px;padding:0px;">
+									<div id="result_box" class="panel panel-default">
+										<div class="panel-heading">
+											<i class="fa fa-spinner fa-spin"></i><font size="3">実行結果</font>
+
+										</div>
+										<div class="panel-body" style="padding:0px;">
+
+											<textarea name="compile" id="message" class="result_form" style="border:none;background:none;width:100%;height:350px;" readonly></textarea>
+										</div>
+									</div>
+									<div id="result-alert">
+										<div id="gouhi_box alert alert-success" role="alert" class="panel panel-default">
+											<div class="panel-heading">
+												<i class="fa fa-check-square"></i><font size="3">合否判定</font>
+
+											</div>
+											<div class="panel-body" style="padding:0px;">
+												<textarea name="gouhi" id="judge" class="gouhi_form" style="border:none;background:none;width:100%;height:100px;" readonly></textarea>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="tab-pane" id="tab2">
+
+
+								<div class="other_menu other2" style="background-color:#272822;height:600px;">
+									<div>
+										<textarea name="" id="" class="" style="border:none;background:none;width:100%;height:600px;" readonly></textarea>
+										<!--
+										<button type="button" id="kesu" style="background-color:black;border:none;"><font color="white">×</font></button>
+									-->
+									</div>
+								</div>
+							</div>
+
+
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--2行目全体row-10-->
+	<script src="js/jquery-2.2.1.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<!--<script src="js/main.js">
+		</script>-->
+	<script src="js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/ace/ace-config.js" type="text/javascript" charset="utf-8"></script>
+</body>
+
+</html>

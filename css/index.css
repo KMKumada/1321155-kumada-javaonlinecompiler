@@ -1,0 +1,25 @@
+.container {
+  overflow: hidden;
+}
+
+.v-align-wrapper {
+  display: table;
+  width: 100%;
+  float: none;
+}
+
+.v-align {
+  display: table-cell;
+  height: 100vh;
+  vertical-align: middle;
+}
+
+p {
+  margin-top: 10vh;
+}
+
+h1 {
+  font-size: 5rem;
+  display: table-cell;
+  vertical-align: middle;
+}

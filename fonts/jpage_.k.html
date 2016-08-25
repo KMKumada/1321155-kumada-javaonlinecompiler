@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="test.css">
+	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+	<script src="src/ace.js" type="text/javascript" charset="utf-8"></script>
+	script type="text/javascript">
+	//editor‚ÌéŒ¾
+	var editor;
+	window.onload = function() {
+		//editor‚ğ‹N“®‚·‚é
+		editor = ace.edit("editor-div");
+		createStudentSelector();
+
+		editor.commands.addCommand({
+  			Name : "savefile",
+  			bindKey: {
+    			win : "Ctrl-S",
+    			mac : "Command-S"
+  			},
+  			exec: function(editor) {
+    			save("save");
+  			}
+		});
+		$('.data_menu1 a.exercise').click(function(){
+
+
+			var student_id = $('#student_selector').val();
+			if (student_id == "") {
+				alert("Please select your name.");
+				return;
+			}
+			var id = $(this).attr('exercise_id');
+
+			document.source.elements['exercise_id'].value = id;
+
+			$.post("loadLatestSource.php", {exercise_id:id, student_id:student_id}, function(data){
+				console.log(data.content);
+				if (data.content) {
+					editor.setValue(data.content);
+					save("restart");
+				} else {
+					editor.setValue("public class Kadai" + id + " {\n\n}");
+					save("start");
+				}
+			})
+
+			$.post("get_exercise.php", {exercise_id:id}, function(data){
+				console.log(data.content);
+				$('#exercise').text(data.content);
+			})
+
+
+			$('.data_menu1 a.exercise').css('color','white')
+			$(this).css('color','red');
+		})
+	};
+
+
+
+	function createStudentSelector() {
+		$.post("create_selector.php", function(data){
+			var sel = $("#student_selector");
+    		//sel.empty();
+    		for (var i=0; i<data.length; i++) {
+      		sel.append('<option value="' + data[i].id + '">' + data[i].name + '</option>');
+    		}
+		})
+	}
+
+	function doAction1(){
+
+		var student_id = $('#student_selector').val();
+		if (student_id == "") {
+			alert("Please select your name.");
+			return;
+		}
+
+		var is_finished = $("#isFinished").prop('checked');
+
+		//lecture_week_id = document.source.elements['lecture_week_id'].value;
+		exercise_id = document.source.elements['exercise_id'].value;
+
+		//editor‚©‚ç’l‚ğæ‚é
+		var str = editor.getValue();
+
+		$.post("getdata.php",{str:str, exercise_id:exercise_id, student_id:student_id, is_finished:is_finished},function(data){
+			console.log(data.result);
+			$('#message').text(data.result);
+			$('#judge').text(data.type);
+		})
+	}
+
+	function save(type){
+		var student_id = $('#student_selector').val();
+		if (student_id == "") {
+			alert("Please select your name.");
+			return;
+		}
+
+		exercise_id = document.source.elements['exercise_id'].value;
+		if (exercise_id == "") {
+			alert("Please select exercise.");
+			return;
+		}
+
+				//editor‚©‚ç’l‚ğæ‚é
+		var str = editor.getValue();
+
+		$.post("save.php",{str:str, exercise_id:exercise_id, student_id:student_id,type:type},function(data){
+			$('#judge').text(data.type);
+		})
+	}
+
+	</script>
+
+	<title>JAVA Cloud Compiler</title>
+	<meta charset="utf-8">
+   	 <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   	 <meta name="viewport" content="width=device-width, initial-scale=1">
+    	<title>Bootstrap Sample</title>
+    	<!-- Bootstrap‚ÌCSS“Ç‚İ‚İ -->
+    	<link href="css/bootstrap.min.css" rel="stylesheet">
+   	 <!-- jQuery“Ç‚İ‚İ -->
+    	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    	<!-- Bootstrap‚ÌJS“Ç‚İ‚İ -->
+   	 <script src="js/bootstrap.min.js"></script>
+
+</head>
+
+<body>
+	<div class="container" style="background-color:white;">
+		<div class="row" style="background-color:red;">
+			<div class="row-mid-4" style="background-color:yellow;"></div>
+			<div class="row-mid-4" style="background-color:blue;"></div>
+			<div class="row-mid-4" style="background-color:green;"></div>
+		</div>
+	</div>
+</body>
+</html>
